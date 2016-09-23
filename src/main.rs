@@ -3,19 +3,40 @@ extern crate vm;
 
 pub use vm::*;
 
+
 /*
-load_u8 %r8_0, 255
+push_u8 255
 
 loop:
-    sub_u8 %r8_0, 1, r8_0
-    if_jmp %r8_0, loop
+    push_u8 1
+    sub_u8
+    if_jmp loop
+
+loop:
+    push_u8 1
+    add_u8
+    push_u8 255
+    eq_u8,
+    if_pop_jmp loop
 
 halt
 */
-static PROGRAM: [u8; 24] = [
-    Instr::load_u8 as u8, RegsId::r8_0 as u8, Instr::type_int as u8, 255,
-    Instr::sub_u8 as u8, Instr::type_reg as u8, RegsId::r8_0 as u8, Instr::type_int as u8, 1, Instr::type_reg as u8, RegsId::r8_0 as u8,
-    Instr::if_jmp as u8, Instr::type_reg as u8, RegsId::r8_0 as u8, Instr::type_int as u8, 0, 0, 0, 0, 0, 0, 0, 4,
+static PROGRAM: [u8; 30] = [
+    Instr::push_u8 as u8, 255,
+
+    Instr::push_u8 as u8, 1,
+    Instr::sub_u8 as u8,
+    Instr::if_jmp as u8, 0, 0, 0, 0, 0, 0, 0, 2,
+
+
+    Instr::push_u8 as u8, 1,
+    Instr::add_u8 as u8,
+
+    Instr::push_u8 as u8, 255,
+    Instr::eq_u8 as u8,
+    Instr::if_pop_jmp as u8, 0, 0, 0, 0, 0, 0, 0, 13,
+
+
     Instr::halt as u8,
 ];
 

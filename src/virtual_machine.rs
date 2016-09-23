@@ -32,20 +32,7 @@ impl VirtualMachine {
             // branching
             Instr::jmp => process.jmp(),
             Instr::if_jmp => process.if_jmp(),
-
-            // load instructions
-            Instr::load_u8 => process.load_u8(),
-            Instr::load_u16 => process.load_u16(),
-            Instr::load_u32 => process.load_u32(),
-            Instr::load_u64 => process.load_u64(),
-
-            Instr::load_i8 => process.load_u8(),
-            Instr::load_i16 => process.load_u16(),
-            Instr::load_i32 => process.load_u32(),
-            Instr::load_i64 => process.load_u64(),
-
-            Instr::load_f32 => process.load_u32(),
-            Instr::load_f64 => process.load_u64(),
+            Instr::if_pop_jmp => process.if_pop_jmp(),
 
             // push instructions
             Instr::push_u8 => {let v = process.next_u8(); process.push_u8(v)},
@@ -144,6 +131,9 @@ impl VirtualMachine {
 
             Instr::rem_f32 => process.rem_f32(),
             Instr::rem_f64 => process.rem_f64(),
+
+
+            Instr::eq_u8 => process.eq_u8(),
 
 
             _ => panic!("Invalid Instruction {:?}", instr),
