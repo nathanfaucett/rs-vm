@@ -40,6 +40,13 @@ impl<'a> Process<'a> {
     }
 
     #[inline]
+    pub fn restart(&mut self) {
+        self.state = State::New;
+        self.program_counter = 0;
+        self.stack.clear();
+    }
+
+    #[inline]
     pub fn is_running(&self) -> bool {self.state == State::Running}
     #[inline]
     pub fn to_instr(instruction: u8) -> Instr {unsafe {mem::transmute(instruction)}}
@@ -654,6 +661,30 @@ impl<'a> Process<'a> {
     }
 
     #[inline]
+    pub fn rem_u8(&mut self) {
+        let a = self.read_u8();
+        let b = self.read_u8();
+        self.write_u8(a % b);
+    }
+    #[inline]
+    pub fn rem_u16(&mut self) {
+        let a = self.read_u16();
+        let b = self.read_u16();
+        self.write_u16(a % b);
+    }
+    #[inline]
+    pub fn rem_u32(&mut self) {
+        let a = self.read_u32();
+        let b = self.read_u32();
+        self.write_u32(a % b);
+    }
+    #[inline]
+    pub fn rem_u64(&mut self) {
+        let a = self.read_u64();
+        let b = self.read_u64();
+        self.write_u64(a % b);
+    }
+    #[inline]
     pub fn rem_i8(&mut self) {
         let a = self.read_u8() as i8;
         let b = self.read_u8() as i8;
@@ -689,26 +720,5 @@ impl<'a> Process<'a> {
         let a = self.read_u64() as f64;
         let b = self.read_u64() as f64;
         self.write_u64((a % b) as u64);
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use self::super::*;
-
-
-    #[test]
-    fn test_next() {
-        let program = [0, 0, 0, 0, 0, 0, 0, 1];
-        let mut process = Process::new(&program);
-        assert_eq!(process.next_usize(), 1usize);
-    }
-
-    #[test]
-    fn test_push_pop() {
-        let program = [];
-        let mut process = Process::new(&program);
-        process.push_u64(1);
-        assert_eq!(process.pop_u64(), 1);
     }
 }

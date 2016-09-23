@@ -5,8 +5,15 @@ virtual machine
 
 ## Instructions
 
+```bash
 types: u8, u16, u32, u64, usize
        i8, i16, i32, i32, isize
+
+halt, nop,
+
+load_{type}
+push_{type}
+pop_{type}
 
 add_{type} a, b, out
 sub_{type} a, b, out
@@ -29,5 +36,7 @@ gte_{type} a, b, out
 eq_{type} a, b, out
 neq_{type} a, b, out
 
+# if value is not 0 jumps to target's index
 if_jmp value, target
 jmp target
+```
