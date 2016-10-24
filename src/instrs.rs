@@ -4,7 +4,9 @@
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum Instr {
 
-    nop = 0, halt,
+    nop = 0, halt, wait,
+
+    new_proc,
 
     // branching
     // if top of stack value is non-zero jump to location

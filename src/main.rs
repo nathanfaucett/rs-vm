@@ -61,7 +61,7 @@ static PROGRAM: [u8; 39] = [
 
 
 fn main() {
-    let mut process = Process::new(&PROGRAM);
-    VirtualMachine::run(&mut process);
-    println!("{:?}", process);
+    let mut vm = VirtualMachine::new(Process::new(&PROGRAM));
+    vm.run();
+    println!("{:?}", vm.current);
 }

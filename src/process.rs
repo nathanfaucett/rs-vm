@@ -12,9 +12,9 @@ pub struct Process<'a> {
     state: State,
 
     program_counter: usize,
-    program: &'a [u8],
+    pub program: &'a [u8],
 
-    pub stack: Vector<u8>,
+    stack: Vector<u8>,
 }
 
 impl<'a> Process<'a> {
@@ -209,9 +209,9 @@ impl<'a> Process<'a> {
     pub fn read_usize(&mut self) -> usize {self.read_u64() as usize}
 
     #[inline]
-    pub fn halt(&mut self) {
-        self.state = State::Terminated;
-    }
+    pub fn halt(&mut self) {self.state = State::Terminated;}
+    #[inline]
+    pub fn wait(&mut self) {self.state = State::Waiting;}
 
     #[inline]
     pub fn jmp(&mut self) {

@@ -1,21 +1,38 @@
+use vector::Vector;
+
 use instrs::Instr;
 use state::State;
 use process::Process;
 
 
-pub struct VirtualMachine;
+pub struct VirtualMachine<'a> {
+    pub current: Process<'a>,
+    processes: Vector<Process<'a>>,
+}
 
 
-impl VirtualMachine {
+impl<'a> VirtualMachine<'a> {
+
+    pub fn new(process: Process<'a>) -> Self {
+        VirtualMachine {
+            current: process,
+            processes: Vector::new(),
+        }
+    }
 
     #[inline]
-    pub fn run<'a>(process: &mut Process<'a>) {
+    pub fn run(&mut self) {
+        Self::run_process(&mut self.current);
+    }
+
+    #[inline]
+    pub fn run_process(process: &mut Process<'a>) {
 
         process.set_state(State::Running);
 
         while process.get_state() == State::Running {
             if let Some(instr) = process.next() {
-                Self::evaluate(process, Process::to_instr(instr));
+                Self::evaluate_instr(process, Process::to_instr(instr));
             } else {
                 process.set_state(State::Terminated);
                 break;
@@ -24,10 +41,11 @@ impl VirtualMachine {
     }
 
     #[inline]
-    fn evaluate(process: &mut Process, instr: Instr) {
+    fn evaluate_instr(process: &mut Process, instr: Instr) {
         match instr {
-            Instr::halt => process.halt(),
             Instr::nop => (),
+            Instr::halt => process.halt(),
+            Instr::wait => process.wait(),
 
             // branching
             Instr::jmp => process.jmp(),
