@@ -1,5 +1,7 @@
 use core::mem;
-use collections::vec::Vec;
+
+use vector::Vector;
+use stack::Stack;
 
 use instrs::Instr;
 use state::State;
@@ -12,7 +14,7 @@ pub struct Process<'a> {
     program_counter: usize,
     program: &'a [u8],
 
-    stack: Vec<u8>,
+    stack: Vector<u8>,
 }
 
 impl<'a> Process<'a> {
@@ -25,7 +27,7 @@ impl<'a> Process<'a> {
             program_counter: 0,
             program: program,
 
-            stack: Vec::new(),
+            stack: Vector::new(),
         }
     }
 
@@ -241,17 +243,6 @@ impl<'a> Process<'a> {
     }
     #[inline]
     pub fn if_jmp(&mut self) {
-        let value = *self.stack.last().expect("Unexpected end of stack");
-
-        if value == 0 {
-            self.skip(8); // skip location instruction
-        } else {
-            let index = self.next_usize();
-            self.program_counter = index;
-        }
-    }
-    #[inline]
-    pub fn if_pop_jmp(&mut self) {
         let value = self.pop_u8();
 
         if value == 0 {
@@ -294,6 +285,42 @@ impl<'a> Process<'a> {
     }
 
     #[inline]
+    pub fn peek_stack(&self, offset: usize) -> u8 {
+        let len = self.stack.len();
+        self.stack[len - offset - 1]
+    }
+    #[inline]
+    pub fn peek_u8(&self, offset: usize) -> u8 {
+        self.peek_stack(offset)
+    }
+    #[inline]
+    pub fn peek_u16(&self, offset: usize) -> u16 {
+        let b0 = self.peek_stack(offset + 0);
+        let b1 = self.peek_stack(offset + 1);
+        Self::to_u16(b1, b0)
+    }
+    #[inline]
+    pub fn peek_u32(&self, offset: usize) -> u32 {
+        let b0 = self.peek_stack(offset + 0);
+        let b1 = self.peek_stack(offset + 1);
+        let b2 = self.peek_stack(offset + 2);
+        let b3 = self.peek_stack(offset + 3);
+        Self::to_u32(b3, b2, b1, b0)
+    }
+    #[inline]
+    pub fn peek_u64(&self, offset: usize) -> u64 {
+        let b0 = self.peek_stack(offset + 0);
+        let b1 = self.peek_stack(offset + 1);
+        let b2 = self.peek_stack(offset + 2);
+        let b3 = self.peek_stack(offset + 3);
+        let b4 = self.peek_stack(offset + 4);
+        let b5 = self.peek_stack(offset + 5);
+        let b6 = self.peek_stack(offset + 6);
+        let b7 = self.peek_stack(offset + 7);
+        Self::to_u64(b7, b6, b5, b4, b3, b2, b1, b0)
+    }
+
+    #[inline]
     pub fn push_u8(&mut self, value: u8) {
         let ref mut stack = self.stack;
         stack.push(value);
@@ -314,6 +341,42 @@ impl<'a> Process<'a> {
     }
     #[inline]
     pub fn push_u64(&mut self, value: u64) {
+        let ref mut stack = self.stack;
+        stack.push((value >> 56) as u8);
+        stack.push((value >> 48) as u8);
+        stack.push((value >> 40) as u8);
+        stack.push((value >> 32) as u8);
+        stack.push((value >> 24) as u8);
+        stack.push((value >> 16) as u8);
+        stack.push((value >> 8) as u8);
+        stack.push(value as u8);
+    }
+
+    #[inline]
+    pub fn copy_u8(&mut self) {
+        let value = self.peek_u8(0);
+        let ref mut stack = self.stack;
+        stack.push(value);
+    }
+    #[inline]
+    pub fn copy_u16(&mut self) {
+        let value = self.peek_u16(0);
+        let ref mut stack = self.stack;
+        stack.push((value >> 8) as u8);
+        stack.push(value as u8);
+    }
+    #[inline]
+    pub fn copy_u32(&mut self) {
+        let value = self.peek_u32(0);
+        let ref mut stack = self.stack;
+        stack.push((value >> 24) as u8);
+        stack.push((value >> 16) as u8);
+        stack.push((value >> 8) as u8);
+        stack.push(value as u8);
+    }
+    #[inline]
+    pub fn copy_u64(&mut self) {
+        let value = self.peek_u64(0);
         let ref mut stack = self.stack;
         stack.push((value >> 56) as u8);
         stack.push((value >> 48) as u8);
@@ -654,5 +717,126 @@ impl<'a> Process<'a> {
         let b = self.pop_u8();
         let a = self.pop_u8();
         self.push_u8((a == b) as u8);
+    }
+    #[inline]
+    pub fn eq_u16(&mut self) {
+        let b = self.pop_u16();
+        let a = self.pop_u16();
+        self.push_u8((a == b) as u8);
+    }
+    #[inline]
+    pub fn eq_u32(&mut self) {
+        let b = self.pop_u32();
+        let a = self.pop_u32();
+        self.push_u8((a == b) as u8);
+    }
+    #[inline]
+    pub fn eq_u64(&mut self) {
+        let b = self.pop_u64();
+        let a = self.pop_u64();
+        self.push_u8((a == b) as u8);
+    }
+
+
+    #[inline]
+    pub fn eq_i8(&mut self) {
+        let b = self.pop_u8() as i8;
+        let a = self.pop_u8() as i8;
+        self.push_u8((a == b) as u8);
+    }
+    #[inline]
+    pub fn eq_i16(&mut self) {
+        let b = self.pop_u16() as i16;
+        let a = self.pop_u16() as i16;
+        self.push_u8((a == b) as u8);
+    }
+    #[inline]
+    pub fn eq_i32(&mut self) {
+        let b = self.pop_u32() as i32;
+        let a = self.pop_u32() as i32;
+        self.push_u8((a == b) as u8);
+    }
+    #[inline]
+    pub fn eq_i64(&mut self) {
+        let b = self.pop_u64() as i64;
+        let a = self.pop_u64() as i64;
+        self.push_u8((a == b) as u8);
+    }
+
+    #[inline]
+    pub fn eq_f32(&mut self) {
+        let b = self.pop_u32() as f32;
+        let a = self.pop_u32() as f32;
+        self.push_u8((a == b) as u8);
+    }
+    #[inline]
+    pub fn eq_f64(&mut self) {
+        let b = self.pop_u64() as f64;
+        let a = self.pop_u64() as f64;
+        self.push_u8((a == b) as u8);
+    }
+
+
+    #[inline]
+    pub fn neq_u8(&mut self) {
+        let b = self.pop_u8();
+        let a = self.pop_u8();
+        self.push_u8((a != b) as u8);
+    }
+    #[inline]
+    pub fn neq_u16(&mut self) {
+        let b = self.pop_u16();
+        let a = self.pop_u16();
+        self.push_u8((a != b) as u8);
+    }
+    #[inline]
+    pub fn neq_u32(&mut self) {
+        let b = self.pop_u32();
+        let a = self.pop_u32();
+        self.push_u8((a != b) as u8);
+    }
+    #[inline]
+    pub fn neq_u64(&mut self) {
+        let b = self.pop_u64();
+        let a = self.pop_u64();
+        self.push_u8((a != b) as u8);
+    }
+
+    #[inline]
+    pub fn neq_i8(&mut self) {
+        let b = self.pop_u8() as i8;
+        let a = self.pop_u8() as i8;
+        self.push_u8((a != b) as u8);
+    }
+    #[inline]
+    pub fn neq_i16(&mut self) {
+        let b = self.pop_u16() as i16;
+        let a = self.pop_u16() as i16;
+        self.push_u8((a != b) as u8);
+    }
+    #[inline]
+    pub fn neq_i32(&mut self) {
+        let b = self.pop_u32() as i32;
+        let a = self.pop_u32() as i32;
+        self.push_u8((a != b) as u8);
+    }
+    #[inline]
+    pub fn neq_i64(&mut self) {
+        let b = self.pop_u64() as i64;
+        let a = self.pop_u64() as i64;
+        self.push_u8((a != b) as u8);
+    }
+
+    #[inline]
+    pub fn neq_f32(&mut self) {
+        let b = self.pop_u32() as f32;
+        let a = self.pop_u32() as f32;
+        self.push_u8((a != b) as u8);
+    }
+    #[inline]
+    pub fn neq_f64(&mut self) {
+        let b = self.pop_u64() as f64;
+        let a = self.pop_u64() as f64;
+        self.push_u8((a != b) as u8);
     }
 }

@@ -7,10 +7,8 @@ pub enum Instr {
     nop = 0, halt,
 
     // branching
-    // if top of stacks value is non-zero jump to location
+    // if top of stack value is non-zero jump to location
     if_jmp,
-    // pop stack for check
-    if_pop_jmp,
     // (location: usize)
     jmp,
 
@@ -24,6 +22,9 @@ pub enum Instr {
 
     pop_u8, pop_u16, pop_u32, pop_u64,
     pop_i8, pop_i16, pop_i32, pop_i64, pop_f32, pop_f64,
+
+    copy_u8, copy_u16, copy_u32, copy_u64,
+    copy_i8, copy_i16, copy_i32, copy_i64, copy_f32, copy_f64,
 
     //binary operations (a: ptr, b: ptr, out: ptr)
     add_u8, add_u16, add_u32, add_u64,
@@ -61,9 +62,6 @@ pub enum Instr {
     neg_u8, neg_u16, neg_u32, neg_u64,
     neg_i8, neg_i16, neg_i32, neg_i64,
 
-    not_u8, not_u16, not_u32, not_u64,
-    not_i8, not_i16, not_i32, not_i64,
-
     // comparison operators (a: ptr, b: ptr, out: ptr)
     lt_u8, lt_u16, lt_u32, lt_u64,
     lt_i8, lt_i16, lt_i32, lt_i64, lt_f32, lt_f64,
@@ -79,4 +77,7 @@ pub enum Instr {
 
     eq_u8, eq_u16, eq_u32, eq_u64,
     eq_i8, eq_i16, eq_i32, eq_i64, eq_f32, eq_f64,
+
+    neq_u8, neq_u16, neq_u32, neq_u64,
+    neq_i8, neq_i16, neq_i32, neq_i64, neq_f32, neq_f64,
 }

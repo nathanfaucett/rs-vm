@@ -6,12 +6,12 @@ virtual machine
 ## Instructions
 
 ```bash
-types: u8, u16, u32, u64, usize
-       i8, i16, i32, i32, isize
+types: u8, u16, u32, u64
+       i8, i16, i32, i32
 
 halt, nop,
 
-load_{type}
+copy_{type} # duplicates top of stack
 push_{type}
 pop_{type}
 
@@ -36,7 +36,7 @@ gte_{type} a, b, out
 eq_{type} a, b, out
 neq_{type} a, b, out
 
-# if value is not 0 jumps to target's index
+# if value is not 0 jumps to target's value
 if_jmp value, target
 jmp target
 ```

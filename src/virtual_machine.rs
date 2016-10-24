@@ -32,7 +32,6 @@ impl VirtualMachine {
             // branching
             Instr::jmp => process.jmp(),
             Instr::if_jmp => process.if_jmp(),
-            Instr::if_pop_jmp => process.if_pop_jmp(),
 
             // push instructions
             Instr::push_u8 => {let v = process.next_u8(); process.push_u8(v)},
@@ -61,6 +60,20 @@ impl VirtualMachine {
 
             Instr::pop_f32 => {let v = process.pop_u32(); process.write_u32(v)},
             Instr::pop_f64 => {let v = process.pop_u64(); process.write_u64(v)},
+
+            // push instructions
+            Instr::copy_u8 => {process.copy_u8()},
+            Instr::copy_u16 => {process.copy_u16()},
+            Instr::copy_u32 => {process.copy_u32()},
+            Instr::copy_u64 => {process.copy_u64()},
+
+            Instr::copy_i8 => {process.copy_u8()},
+            Instr::copy_i16 => {process.copy_u16()},
+            Instr::copy_i32 => {process.copy_u32()},
+            Instr::copy_i64 => {process.copy_u64()},
+
+            Instr::copy_f32 => {process.copy_u32()},
+            Instr::copy_f64 => {process.copy_u64()},
 
             // add instructions
             Instr::add_u8 => process.add_u8(),
@@ -132,9 +145,33 @@ impl VirtualMachine {
             Instr::rem_f32 => process.rem_f32(),
             Instr::rem_f64 => process.rem_f64(),
 
-
+            // eq instructions
             Instr::eq_u8 => process.eq_u8(),
+            Instr::eq_u16 => process.eq_u16(),
+            Instr::eq_u32 => process.eq_u32(),
+            Instr::eq_u64 => process.eq_u64(),
 
+            Instr::eq_i8 => process.eq_i8(),
+            Instr::eq_i16 => process.eq_i16(),
+            Instr::eq_i32 => process.eq_i32(),
+            Instr::eq_i64 => process.eq_i64(),
+
+            Instr::eq_f32 => process.eq_f32(),
+            Instr::eq_f64 => process.eq_f64(),
+
+            // not eq instructions
+            Instr::neq_u8 => process.neq_u8(),
+            Instr::neq_u16 => process.neq_u16(),
+            Instr::neq_u32 => process.neq_u32(),
+            Instr::neq_u64 => process.neq_u64(),
+
+            Instr::neq_i8 => process.neq_i8(),
+            Instr::neq_i16 => process.neq_i16(),
+            Instr::neq_i32 => process.neq_i32(),
+            Instr::neq_i64 => process.neq_i64(),
+
+            Instr::neq_f32 => process.neq_f32(),
+            Instr::neq_f64 => process.neq_f64(),
 
             _ => panic!("Invalid Instruction {:?}", instr),
         }

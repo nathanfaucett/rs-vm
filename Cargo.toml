@@ -9,3 +9,8 @@ license = "MIT"
 readme = "README.md"
 repository = "https://github.com/nathanfaucett/rs-vm.git"
 homepage = "https://github.com/nathanfaucett/rs-vm"
+
+[dependencies.vector]
+git = "https://github.com/nathanfaucett/rs-vector.git"
+[dependencies.stack]
+git = "https://github.com/nathanfaucett/rs-stack.git"

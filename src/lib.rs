@@ -1,9 +1,11 @@
 #![feature(collections)]
-//#![no_std]
+#![no_std]
 
 
-extern crate core;
 extern crate collections;
+
+extern crate vector;
+extern crate stack;
 
 
 mod instrs;
