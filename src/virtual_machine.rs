@@ -48,32 +48,32 @@ impl VirtualMachine {
             Instr::push_f64 => {let v = process.next_u64(); process.push_u64(v)},
 
             // pop instructions
-            Instr::pop_u8 => {let v = process.pop_u8(); process.write_u8(v)},
-            Instr::pop_u16 => {let v = process.pop_u16(); process.write_u16(v)},
-            Instr::pop_u32 => {let v = process.pop_u32(); process.write_u32(v)},
-            Instr::pop_u64 => {let v = process.pop_u64(); process.write_u64(v)},
+            Instr::pop_u8 => {process.pop_u8();},
+            Instr::pop_u16 => {process.pop_u16();},
+            Instr::pop_u32 => {process.pop_u32();},
+            Instr::pop_u64 => {process.pop_u64();},
 
-            Instr::pop_i8 => {let v = process.pop_u8(); process.write_u8(v)},
-            Instr::pop_i16 => {let v = process.pop_u16(); process.write_u16(v)},
-            Instr::pop_i32 => {let v = process.pop_u32(); process.write_u32(v)},
-            Instr::pop_i64 => {let v = process.pop_u64(); process.write_u64(v)},
+            Instr::pop_i8 => {process.pop_u8();},
+            Instr::pop_i16 => {process.pop_u16();},
+            Instr::pop_i32 => {process.pop_u32();},
+            Instr::pop_i64 => {process.pop_u64();},
 
-            Instr::pop_f32 => {let v = process.pop_u32(); process.write_u32(v)},
-            Instr::pop_f64 => {let v = process.pop_u64(); process.write_u64(v)},
+            Instr::pop_f32 => {process.pop_u32();},
+            Instr::pop_f64 => {process.pop_u64();},
 
             // push instructions
-            Instr::copy_u8 => {process.copy_u8()},
-            Instr::copy_u16 => {process.copy_u16()},
-            Instr::copy_u32 => {process.copy_u32()},
-            Instr::copy_u64 => {process.copy_u64()},
+            Instr::copy_u8 => process.copy_u8(),
+            Instr::copy_u16 => process.copy_u16(),
+            Instr::copy_u32 => process.copy_u32(),
+            Instr::copy_u64 => process.copy_u64(),
 
-            Instr::copy_i8 => {process.copy_u8()},
-            Instr::copy_i16 => {process.copy_u16()},
-            Instr::copy_i32 => {process.copy_u32()},
-            Instr::copy_i64 => {process.copy_u64()},
+            Instr::copy_i8 => process.copy_u8(),
+            Instr::copy_i16 => process.copy_u16(),
+            Instr::copy_i32 => process.copy_u32(),
+            Instr::copy_i64 => process.copy_u64(),
 
-            Instr::copy_f32 => {process.copy_u32()},
-            Instr::copy_f64 => {process.copy_u64()},
+            Instr::copy_f32 => process.copy_u32(),
+            Instr::copy_f64 => process.copy_u64(),
 
             // add instructions
             Instr::add_u8 => process.add_u8(),

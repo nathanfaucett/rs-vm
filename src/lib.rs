@@ -1,8 +1,5 @@
-#![feature(collections)]
 #![no_std]
 
-
-extern crate collections;
 
 extern crate vector;
 extern crate stack;

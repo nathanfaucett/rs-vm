@@ -14,7 +14,7 @@ pub struct Process<'a> {
     program_counter: usize,
     program: &'a [u8],
 
-    stack: Vector<u8>,
+    pub stack: Vector<u8>,
 }
 
 impl<'a> Process<'a> {
@@ -207,29 +207,6 @@ impl<'a> Process<'a> {
     #[cfg(target_pointer_width = "64")]
     #[inline]
     pub fn read_usize(&mut self) -> usize {self.read_u64() as usize}
-
-    #[inline]
-    pub fn write_u8(&mut self, value: u8) {
-        unsafe { *(self.next_usize() as *mut u8) = value; }
-    }
-    #[inline]
-    pub fn write_u16(&mut self, value: u16) {
-        unsafe { *(self.next_usize() as *mut u16) = value; }
-    }
-    #[inline]
-    pub fn write_u32(&mut self, value: u32) {
-        unsafe { *(self.next_usize() as *mut u32) = value; }
-    }
-    #[inline]
-    pub fn write_u64(&mut self, value: u64) {
-        unsafe { *(self.next_usize() as *mut u64) = value; }
-    }
-    #[cfg(target_pointer_width = "32")]
-    #[inline]
-    pub fn write_usize(&mut self, value: usize) {self.write_u32(value as u32);}
-    #[cfg(target_pointer_width = "64")]
-    #[inline]
-    pub fn write_usize(&mut self, value: usize) {self.write_u64(value as u64);}
 
     #[inline]
     pub fn halt(&mut self) {
