@@ -17,6 +17,7 @@ pub struct Process<'a> {
     program: &'a [u8],
 
     stack: Vector<u8>,
+    function_stack: Vector<usize>,
 }
 
 impl<'a> Process<'a> {
@@ -31,6 +32,7 @@ impl<'a> Process<'a> {
             program: program,
 
             stack: Vector::new(),
+            function_stack: Vector::new(),
         }
     }
 
@@ -44,6 +46,7 @@ impl<'a> Process<'a> {
             program: self.program,
 
             stack: Vector::new(),
+            function_stack: Vector::new(),
         }
     }
 
@@ -240,6 +243,13 @@ impl<'a> Process<'a> {
             let index = self.next_usize();
             self.program_counter = index;
         }
+    }
+    
+    #[inline]
+    pub fn call(&mut self) {
+        let index = self.next_usize();
+        self.function_stack.push(index);
+        self.program_counter = index;
     }
 
     #[inline]
