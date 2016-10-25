@@ -253,8 +253,8 @@ impl<'a> Process<'a> {
     }
     #[inline]
     pub fn return(&mut self) {
-        let index = self.function_stack.pop();
-        self.program_counter = index;
+        let program_counter = self.function_stack.pop();
+        self.program_counter = program_counter;
     }
 
     #[inline]
