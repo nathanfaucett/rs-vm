@@ -248,7 +248,7 @@ impl<'a> Process<'a> {
     #[inline]
     pub fn call(&mut self) {
         let index = self.next_usize();
-        self.function_stack.push(index);
+        self.function_stack.push(self.program_counter);
         self.program_counter = index;
     }
 
