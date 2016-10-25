@@ -100,6 +100,10 @@ impl<'a> VirtualMachine<'a> {
             Instr::jmp => self.process.jmp(),
             Instr::if_jmp => self.process.if_jmp(),
 
+            // function calls
+            Instr::call => self.process.call(),
+            Instr::return => self.process.return(),
+
             // push instructions
             Instr::push_u8 => {let v = self.process.next_u8(); self.process.push_u8(v)},
             Instr::push_u16 => {let v = self.process.next_u16(); self.process.push_u16(v)},
