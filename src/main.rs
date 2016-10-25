@@ -5,7 +5,7 @@ pub use vm::*;
 
 
 /*
-push_u8 255
+push_u8 5
 
 loop1:
     push_u8 1
@@ -18,22 +18,23 @@ loop1:
     pop_u8
 
 spawn new_process
-jmp loop2_end
+jmp new_process_end
 
 new_process:
-push_u8 0
+    push_u8 0
 
-loop2:
-    push_u8 1
-    add_u8
+    loop2:
+        push_u8 1
+        add_u8
 
-    copy_u8
-    push_u8 255
-    neq_u8,
-    if_jmp loop2
-    pop_u8
-    halt
-loop2_end;
+        copy_u8
+        push_u8 5
+        neq_u8,
+        if_jmp loop2
+        pop_u8
+        halt
+    loop2_end:
+new_process_end:
 
 halt
 */
