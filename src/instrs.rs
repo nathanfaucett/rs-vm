@@ -13,6 +13,9 @@ pub enum Instr {
     if_jmp,
     // (location: usize)
     jmp,
+    
+    // function call, return
+    call, return,
 
     // types
     // instructs the vm to interpret the next bytes as pointer or intermediate value
