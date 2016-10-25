@@ -6,7 +6,7 @@ pub enum Instr {
 
     nop = 0, halt, wait,
 
-    new_proc,
+    spawn,
 
     // branching
     // if top of stack value is non-zero jump to location
@@ -27,6 +27,13 @@ pub enum Instr {
 
     copy_u8, copy_u16, copy_u32, copy_u64,
     copy_i8, copy_i16, copy_i32, copy_i64, copy_f32, copy_f64,
+
+    // memory
+    load_u8, load_u16, load_u32, load_u64,
+    load_i8, load_i16, load_i32, load_i64, load_f32, load_f64,
+
+    save_u8, save_u16, save_u32, save_u64,
+    save_i8, save_i16, save_i32, save_i64, save_f32, save_f64,
 
     //binary operations (a: ptr, b: ptr, out: ptr)
     add_u8, add_u16, add_u32, add_u64,

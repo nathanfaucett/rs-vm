@@ -12,5 +12,9 @@ homepage = "https://github.com/nathanfaucett/rs-vm"
 
 [dependencies.vector]
 git = "https://github.com/nathanfaucett/rs-vector.git"
+[dependencies.collection]
+git = "https://github.com/nathanfaucett/rs-collection.git"
 [dependencies.stack]
 git = "https://github.com/nathanfaucett/rs-stack.git"
+[dependencies.remove]
+git = "https://github.com/nathanfaucett/rs-remove.git"

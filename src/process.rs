@@ -9,10 +9,12 @@ use state::State;
 
 #[derive(Debug)]
 pub struct Process<'a> {
+    id: usize,
+
     state: State,
 
     program_counter: usize,
-    pub program: &'a [u8],
+    program: &'a [u8],
 
     stack: Vector<u8>,
 }
@@ -20,9 +22,10 @@ pub struct Process<'a> {
 impl<'a> Process<'a> {
 
     #[inline]
-    pub fn new(program: &'a [u8]) -> Self {
+    pub fn new(id: usize, program: &'a [u8]) -> Self {
         Process {
-            state: State::New,
+            id: id,
+            state: State::Running,
 
             program_counter: 0,
             program: program,
@@ -32,17 +35,26 @@ impl<'a> Process<'a> {
     }
 
     #[inline]
+    pub fn spawn(&mut self, id: usize, target: usize) -> Self {
+        Process {
+            id: id,
+            state: State::Running,
+
+            program_counter: target,
+            program: self.program,
+
+            stack: Vector::new(),
+        }
+    }
+
+    #[inline]
+    pub fn get_id(&self) -> usize {self.id}
+
+    #[inline]
     pub fn get_state(&self) -> State {self.state}
     #[inline]
     pub fn set_state(&mut self, state: State) {
         self.state = state;
-    }
-
-    #[inline]
-    pub fn restart(&mut self) {
-        self.state = State::New;
-        self.program_counter = 0;
-        self.stack.clear();
     }
 
     #[inline]

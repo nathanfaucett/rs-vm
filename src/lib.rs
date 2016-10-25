@@ -2,7 +2,9 @@
 
 
 extern crate vector;
+extern crate collection;
 extern crate stack;
+extern crate remove;
 
 
 mod instrs;

@@ -11,6 +11,10 @@ types: u8, u16, u32, u64
 
 halt, nop,
 
+wait # puts process in Wait state
+
+spawn target # spawns new process starting at target
+
 copy_{type} # duplicates top of stack
 push_{type}
 pop_{type}
