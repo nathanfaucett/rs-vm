@@ -102,7 +102,7 @@ impl<'a> VirtualMachine<'a> {
 
             // function calls
             Instr::call => self.process.call(),
-            Instr::return => self.process.return(),
+            Instr::ret => self.process.ret(),
 
             // push instructions
             Instr::push_u8 => {let v = self.process.next_u8(); self.process.push_u8(v)},

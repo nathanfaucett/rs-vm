@@ -15,7 +15,7 @@ pub enum Instr {
     jmp,
     
     // function call, return
-    call, return,
+    call, ret,
 
     // types
     // instructs the vm to interpret the next bytes as pointer or intermediate value

@@ -252,8 +252,8 @@ impl<'a> Process<'a> {
         self.program_counter = index;
     }
     #[inline]
-    pub fn return(&mut self) {
-        let index = self.function_stack.pop();
+    pub fn ret(&mut self) {
+        let index = self.function_stack.pop().expect("Unexpected end of function stack");
         self.program_counter = index;
     }
 
