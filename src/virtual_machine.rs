@@ -35,7 +35,7 @@ impl<'a> VirtualMachine<'a> {
     #[inline]
     pub fn run(&mut self) {
         loop {
-            if self.process.get_state() != State::Terminated {
+            if self.process.get_state() == State::Running {
                 if let Some(instr) = self.process.next() {
                     self.evaluate_instr(Process::to_instr(instr));
                 } else {
