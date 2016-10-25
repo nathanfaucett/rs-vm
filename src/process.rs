@@ -251,6 +251,11 @@ impl<'a> Process<'a> {
         self.function_stack.push(self.program_counter);
         self.program_counter = index;
     }
+    #[inline]
+    pub fn return(&mut self) {
+        let index = self.function_stack.pop();
+        self.program_counter = index;
+    }
 
     #[inline]
     pub fn pop_u8(&mut self) -> u8 {
