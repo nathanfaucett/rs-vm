@@ -64,20 +64,20 @@ impl<'a> VirtualMachine<'a> {
 
     #[inline]
     pub fn switch(&mut self) {
-        let index = 0;
         let mut new_process_index = None;
-
-        self.processes.retain(|process| process.get_state() != State::Terminated);
-
-        for process in self.processes.iter_mut() {
-            match process.get_state() {
-                State::Waiting => {
+        
+        if self.processes.len() != 0 {
+            let mut index = 0;
+    
+            self.processes.retain(|process| process.get_state() != State::Terminated);
+    
+            for process in self.processes.iter_mut() {
+                if process.get_state() == State::Waiting {
                     new_process_index = Some(index);
                     break;
-                },
-                state => panic!("Invalid process State {:?}", state),
+                }
+                index += 1;
             }
-            index += 1;
         }
 
         if let Some(index) = new_process_index {
@@ -85,6 +85,8 @@ impl<'a> VirtualMachine<'a> {
             new_process.set_state(State::Running);
             let old_process = mem::replace(&mut self.process, new_process);
             self.processes.push(old_process);
+        } else if self.process.get_state() == State::Waiting {
+            self.process.set_state(State::Running);
         }
     }
 

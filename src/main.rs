@@ -30,6 +30,7 @@ new_process:
         copy_u8
         push_u8 5
         neq_u8,
+        wait,
         if_jmp loop2
         pop_u8
         halt
@@ -38,7 +39,7 @@ new_process_end:
 
 halt
 */
-static PROGRAM: [u8; 58] = [
+static PROGRAM: [u8; 59] = [
     Instr::push_u8 as u8, 5,
 
     // loop1
@@ -54,7 +55,7 @@ static PROGRAM: [u8; 58] = [
 
 
     Instr::spawn as u8, 0, 0, 0, 0, 0, 0, 0, 37,
-    Instr::jmp as u8, 0, 0, 0, 0, 0, 0, 0, 57,
+    Instr::jmp as u8, 0, 0, 0, 0, 0, 0, 0, 58,
 
     Instr::push_u8 as u8, 0,
 
@@ -65,6 +66,7 @@ static PROGRAM: [u8; 58] = [
     Instr::copy_u8 as u8,
     Instr::push_u8 as u8, 5,
     Instr::neq_u8 as u8,
+    Instr::wait as u8,
     Instr::if_jmp as u8, 0, 0, 0, 0, 0, 0, 0, 39,
     Instr::pop_u8 as u8,
     Instr::halt as u8,
