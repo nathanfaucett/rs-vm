@@ -1,4 +1,5 @@
-#![no_std]
+//#![no_std]
+extern crate core;
 
 
 extern crate vector;

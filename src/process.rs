@@ -9,8 +9,6 @@ use state::State;
 
 #[derive(Debug)]
 pub struct Process<'a> {
-    id: usize,
-
     state: State,
 
     program_counter: usize,
@@ -23,9 +21,8 @@ pub struct Process<'a> {
 impl<'a> Process<'a> {
 
     #[inline]
-    pub fn new(id: usize, program: &'a [u8]) -> Self {
+    pub fn new(program: &'a [u8]) -> Self {
         Process {
-            id: id,
             state: State::Running,
 
             program_counter: 0,
@@ -35,23 +32,6 @@ impl<'a> Process<'a> {
             function_stack: Vector::new(),
         }
     }
-
-    #[inline]
-    pub fn spawn(&mut self, id: usize, target: usize) -> Self {
-        Process {
-            id: id,
-            state: State::Running,
-
-            program_counter: target,
-            program: self.program,
-
-            stack: Vector::new(),
-            function_stack: Vector::new(),
-        }
-    }
-
-    #[inline]
-    pub fn get_id(&self) -> usize {self.id}
 
     #[inline]
     pub fn get_state(&self) -> State {self.state}
@@ -224,9 +204,7 @@ impl<'a> Process<'a> {
     pub fn read_usize(&mut self) -> usize {self.read_u64() as usize}
 
     #[inline]
-    pub fn halt(&mut self) {self.state = State::Terminated;}
-    #[inline]
-    pub fn wait(&mut self) {self.state = State::Waiting;}
+    pub fn halt(&mut self) {self.state = State::Waiting;}
 
     #[inline]
     pub fn jmp(&mut self) {
@@ -244,7 +222,7 @@ impl<'a> Process<'a> {
             self.program_counter = index;
         }
     }
-    
+
     #[inline]
     pub fn call(&mut self) {
         let index = self.next_usize();

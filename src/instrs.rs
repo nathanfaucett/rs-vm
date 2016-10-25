@@ -4,16 +4,14 @@
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum Instr {
 
-    nop = 0, halt, wait,
-
-    spawn,
+    nop = 0, halt,
 
     // branching
     // if top of stack value is non-zero jump to location
     if_jmp,
     // (location: usize)
     jmp,
-    
+
     // function call, return
     call, ret,
 
