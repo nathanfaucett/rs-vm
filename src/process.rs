@@ -23,7 +23,7 @@ impl<'a> Process<'a> {
     #[inline]
     pub fn new(program: &'a [u8]) -> Self {
         Process {
-            state: State::Running,
+            state: State::New,
 
             program_counter: 0,
             program: program,
@@ -162,7 +162,15 @@ impl<'a> Process<'a> {
 
         match typ {
             Instr::type_int => self.next_u8(),
+
             Instr::type_ptr => unsafe {*(self.next_usize() as *const u8)},
+            Instr::type_ptr_off => unsafe {*((self.next_usize() + self.next_usize()) as *const u8)},
+
+            Instr::type_idr_ptr => unsafe {**(self.next_usize() as *const *const u8)},
+            Instr::type_idr_ptr_off => unsafe {
+                *((*(self.next_usize() as *const usize) + self.next_usize()) as *const u8)
+            },
+
             instr => panic!("Invalid type {:?} given, trying to read 8 bits ", instr),
         }
     }
@@ -172,7 +180,15 @@ impl<'a> Process<'a> {
 
         match typ {
             Instr::type_int => self.next_u16(),
+
             Instr::type_ptr => unsafe {*(self.next_usize() as *const u16)},
+            Instr::type_ptr_off => unsafe {*((self.next_usize() + self.next_usize()) as *const u16)},
+
+            Instr::type_idr_ptr => unsafe {**(self.next_usize() as *const *const u16)},
+            Instr::type_idr_ptr_off => unsafe {
+                *((*(self.next_usize() as *const usize) + self.next_usize()) as *const u16)
+            },
+
             instr => panic!("Invalid type {:?} given, trying to read 16 bits", instr),
         }
     }
@@ -182,7 +198,15 @@ impl<'a> Process<'a> {
 
         match typ {
             Instr::type_int => self.next_u32(),
+
             Instr::type_ptr => unsafe {*(self.next_usize() as *const u32)},
+            Instr::type_ptr_off => unsafe {*((self.next_usize() + self.next_usize()) as *const u32)},
+
+            Instr::type_idr_ptr => unsafe {**(self.next_usize() as *const *const u32)},
+            Instr::type_idr_ptr_off => unsafe {
+                *((*(self.next_usize() as *const usize) + self.next_usize()) as *const u32)
+            },
+
             instr => panic!("Invalid type {:?} given, trying to read 32 bits", instr),
         }
     }
@@ -192,7 +216,15 @@ impl<'a> Process<'a> {
 
         match typ {
             Instr::type_int => self.next_u64(),
+
             Instr::type_ptr => unsafe {*(self.next_usize() as *const u64)},
+            Instr::type_ptr_off => unsafe {*((self.next_usize() + self.next_usize()) as *const u64)},
+
+            Instr::type_idr_ptr => unsafe {**(self.next_usize() as *const *const u64)},
+            Instr::type_idr_ptr_off => unsafe {
+                *((*(self.next_usize() as *const usize) + self.next_usize()) as *const u64)
+            },
+
             instr => panic!("Invalid type {:?} given, trying to read 64 bits", instr),
         }
     }
@@ -266,6 +298,13 @@ impl<'a> Process<'a> {
         Self::to_u64(b7, b6, b5, b4, b3, b2, b1, b0)
     }
 
+    #[cfg(target_pointer_width = "32")]
+    #[inline]
+    pub fn pop_usize(&mut self) -> usize {self.pop_u32() as usize}
+    #[cfg(target_pointer_width = "64")]
+    #[inline]
+    pub fn pop_usize(&mut self) -> usize {self.pop_u64() as usize}
+
     #[inline]
     pub fn peek_stack(&self, offset: usize) -> u8 {
         let len = self.stack.len();
@@ -302,6 +341,13 @@ impl<'a> Process<'a> {
         Self::to_u64(b7, b6, b5, b4, b3, b2, b1, b0)
     }
 
+    #[cfg(target_pointer_width = "32")]
+    #[inline]
+    pub fn peek_usize(&mut self, offset: usize) -> usize {self.peek_u32(offset) as usize}
+    #[cfg(target_pointer_width = "64")]
+    #[inline]
+    pub fn peek_usize(&mut self, offset: usize) -> usize {self.peek_u64(offset) as usize}
+
     #[inline]
     pub fn push_u8(&mut self, value: u8) {
         let ref mut stack = self.stack;
@@ -333,6 +379,13 @@ impl<'a> Process<'a> {
         stack.push((value >> 8) as u8);
         stack.push(value as u8);
     }
+
+    #[cfg(target_pointer_width = "32")]
+    #[inline]
+    pub fn push_usize(&mut self, value: usize) {self.push_u32(value as u32);}
+    #[cfg(target_pointer_width = "64")]
+    #[inline]
+    pub fn push_usize(&mut self, value: usize) {self.push_u64(value as u64);}
 
     #[inline]
     pub fn copy_u8(&mut self) {
@@ -368,6 +421,66 @@ impl<'a> Process<'a> {
         stack.push((value >> 16) as u8);
         stack.push((value >> 8) as u8);
         stack.push(value as u8);
+    }
+
+    #[inline]
+    pub fn load_u8(&mut self) {
+        let value = unsafe {*(self.pop_usize() as *const u8)};
+        self.stack.push(value);
+    }
+    #[inline]
+    pub fn load_u16(&mut self) {
+        let value = unsafe {*(self.pop_usize() as *const u16)};
+        let ref mut stack = self.stack;
+        stack.push((value >> 8) as u8);
+        stack.push(value as u8);
+    }
+    #[inline]
+    pub fn load_u32(&mut self) {
+        let value = unsafe {*(self.pop_usize() as *const u32)};
+        let ref mut stack = self.stack;
+        stack.push((value >> 24) as u8);
+        stack.push((value >> 16) as u8);
+        stack.push((value >> 8) as u8);
+        stack.push(value as u8);
+    }
+    #[inline]
+    pub fn load_u64(&mut self) {
+        let value = unsafe {*(self.pop_usize() as *const u64)};
+        let ref mut stack = self.stack;
+        stack.push((value >> 56) as u8);
+        stack.push((value >> 48) as u8);
+        stack.push((value >> 40) as u8);
+        stack.push((value >> 32) as u8);
+        stack.push((value >> 24) as u8);
+        stack.push((value >> 16) as u8);
+        stack.push((value >> 8) as u8);
+        stack.push(value as u8);
+    }
+
+    #[inline]
+    pub fn save_u8(&mut self) {
+        let mut address = self.pop_usize() as *mut u8;
+        let value = self.pop_u8();
+        unsafe {*address = value};
+    }
+    #[inline]
+    pub fn save_u16(&mut self) {
+        let mut address = self.pop_usize() as *mut u16;
+        let value = self.pop_u16();
+        unsafe {*address = value};
+    }
+    #[inline]
+    pub fn save_u32(&mut self) {
+        let mut address = self.pop_usize() as *mut u32;
+        let value = self.pop_u32();
+        unsafe {*address = value};
+    }
+    #[inline]
+    pub fn save_u64(&mut self) {
+        let mut address = self.pop_usize() as *mut u64;
+        let value = self.pop_u64();
+        unsafe {*address = value};
     }
 
     /*
@@ -691,6 +804,614 @@ impl<'a> Process<'a> {
         let b = self.pop_u64() as f64;
         let a = self.pop_u64() as f64;
         self.push_u64((a % b) as u64);
+    }
+
+
+    #[inline]
+    pub fn and_u8(&mut self) {
+        let b = self.pop_u8();
+        let a = self.pop_u8();
+        self.push_u8(a & b);
+    }
+    #[inline]
+    pub fn and_u16(&mut self) {
+        let b = self.pop_u16();
+        let a = self.pop_u16();
+        self.push_u16(a & b);
+    }
+    #[inline]
+    pub fn and_u32(&mut self) {
+        let b = self.pop_u32();
+        let a = self.pop_u32();
+        self.push_u32(a & b);
+    }
+    #[inline]
+    pub fn and_u64(&mut self) {
+        let b = self.pop_u64();
+        let a = self.pop_u64();
+        self.push_u64(a & b);
+    }
+
+    #[inline]
+    pub fn and_i8(&mut self) {
+        let b = self.pop_u8() as i8;
+        let a = self.pop_u8() as i8;
+        self.push_u8((a & b) as u8);
+    }
+    #[inline]
+    pub fn and_i16(&mut self) {
+        let b = self.pop_u16() as i16;
+        let a = self.pop_u16() as i16;
+        self.push_u16((a & b) as u16);
+    }
+    #[inline]
+    pub fn and_i32(&mut self) {
+        let b = self.pop_u32() as i32;
+        let a = self.pop_u32() as i32;
+        self.push_u32((a & b) as u32);
+    }
+    #[inline]
+    pub fn and_i64(&mut self) {
+        let b = self.pop_u64() as i64;
+        let a = self.pop_u64() as i64;
+        self.push_u64((a & b) as u64);
+    }
+
+
+    #[inline]
+    pub fn or_u8(&mut self) {
+        let b = self.pop_u8();
+        let a = self.pop_u8();
+        self.push_u8(a | b);
+    }
+    #[inline]
+    pub fn or_u16(&mut self) {
+        let b = self.pop_u16();
+        let a = self.pop_u16();
+        self.push_u16(a | b);
+    }
+    #[inline]
+    pub fn or_u32(&mut self) {
+        let b = self.pop_u32();
+        let a = self.pop_u32();
+        self.push_u32(a | b);
+    }
+    #[inline]
+    pub fn or_u64(&mut self) {
+        let b = self.pop_u64();
+        let a = self.pop_u64();
+        self.push_u64(a | b);
+    }
+
+    #[inline]
+    pub fn or_i8(&mut self) {
+        let b = self.pop_u8() as i8;
+        let a = self.pop_u8() as i8;
+        self.push_u8((a | b) as u8);
+    }
+    #[inline]
+    pub fn or_i16(&mut self) {
+        let b = self.pop_u16() as i16;
+        let a = self.pop_u16() as i16;
+        self.push_u16((a | b) as u16);
+    }
+    #[inline]
+    pub fn or_i32(&mut self) {
+        let b = self.pop_u32() as i32;
+        let a = self.pop_u32() as i32;
+        self.push_u32((a | b) as u32);
+    }
+    #[inline]
+    pub fn or_i64(&mut self) {
+        let b = self.pop_u64() as i64;
+        let a = self.pop_u64() as i64;
+        self.push_u64((a | b) as u64);
+    }
+
+
+    #[inline]
+    pub fn xor_u8(&mut self) {
+        let b = self.pop_u8();
+        let a = self.pop_u8();
+        self.push_u8(a ^ b);
+    }
+    #[inline]
+    pub fn xor_u16(&mut self) {
+        let b = self.pop_u16();
+        let a = self.pop_u16();
+        self.push_u16(a ^ b);
+    }
+    #[inline]
+    pub fn xor_u32(&mut self) {
+        let b = self.pop_u32();
+        let a = self.pop_u32();
+        self.push_u32(a ^ b);
+    }
+    #[inline]
+    pub fn xor_u64(&mut self) {
+        let b = self.pop_u64();
+        let a = self.pop_u64();
+        self.push_u64(a ^ b);
+    }
+
+    #[inline]
+    pub fn xor_i8(&mut self) {
+        let b = self.pop_u8() as i8;
+        let a = self.pop_u8() as i8;
+        self.push_u8((a ^ b) as u8);
+    }
+    #[inline]
+    pub fn xor_i16(&mut self) {
+        let b = self.pop_u16() as i16;
+        let a = self.pop_u16() as i16;
+        self.push_u16((a ^ b) as u16);
+    }
+    #[inline]
+    pub fn xor_i32(&mut self) {
+        let b = self.pop_u32() as i32;
+        let a = self.pop_u32() as i32;
+        self.push_u32((a ^ b) as u32);
+    }
+    #[inline]
+    pub fn xor_i64(&mut self) {
+        let b = self.pop_u64() as i64;
+        let a = self.pop_u64() as i64;
+        self.push_u64((a ^ b) as u64);
+    }
+
+
+    #[inline]
+    pub fn shl_u8(&mut self) {
+        let b = self.pop_u8();
+        let a = self.pop_u8();
+        self.push_u8(a << b);
+    }
+    #[inline]
+    pub fn shl_u16(&mut self) {
+        let b = self.pop_u16();
+        let a = self.pop_u16();
+        self.push_u16(a << b);
+    }
+    #[inline]
+    pub fn shl_u32(&mut self) {
+        let b = self.pop_u32();
+        let a = self.pop_u32();
+        self.push_u32(a << b);
+    }
+    #[inline]
+    pub fn shl_u64(&mut self) {
+        let b = self.pop_u64();
+        let a = self.pop_u64();
+        self.push_u64(a << b);
+    }
+
+    #[inline]
+    pub fn shl_i8(&mut self) {
+        let b = self.pop_u8() as i8;
+        let a = self.pop_u8() as i8;
+        self.push_u8((a << b) as u8);
+    }
+    #[inline]
+    pub fn shl_i16(&mut self) {
+        let b = self.pop_u16() as i16;
+        let a = self.pop_u16() as i16;
+        self.push_u16((a << b) as u16);
+    }
+    #[inline]
+    pub fn shl_i32(&mut self) {
+        let b = self.pop_u32() as i32;
+        let a = self.pop_u32() as i32;
+        self.push_u32((a << b) as u32);
+    }
+    #[inline]
+    pub fn shl_i64(&mut self) {
+        let b = self.pop_u64() as i64;
+        let a = self.pop_u64() as i64;
+        self.push_u64((a << b) as u64);
+    }
+
+
+    #[inline]
+    pub fn shr_u8(&mut self) {
+        let b = self.pop_u8();
+        let a = self.pop_u8();
+        self.push_u8(a >> b);
+    }
+    #[inline]
+    pub fn shr_u16(&mut self) {
+        let b = self.pop_u16();
+        let a = self.pop_u16();
+        self.push_u16(a >> b);
+    }
+    #[inline]
+    pub fn shr_u32(&mut self) {
+        let b = self.pop_u32();
+        let a = self.pop_u32();
+        self.push_u32(a >> b);
+    }
+    #[inline]
+    pub fn shr_u64(&mut self) {
+        let b = self.pop_u64();
+        let a = self.pop_u64();
+        self.push_u64(a >> b);
+    }
+
+    #[inline]
+    pub fn shr_i8(&mut self) {
+        let b = self.pop_u8() as i8;
+        let a = self.pop_u8() as i8;
+        self.push_u8((a >> b) as u8);
+    }
+    #[inline]
+    pub fn shr_i16(&mut self) {
+        let b = self.pop_u16() as i16;
+        let a = self.pop_u16() as i16;
+        self.push_u16((a >> b) as u16);
+    }
+    #[inline]
+    pub fn shr_i32(&mut self) {
+        let b = self.pop_u32() as i32;
+        let a = self.pop_u32() as i32;
+        self.push_u32((a >> b) as u32);
+    }
+    #[inline]
+    pub fn shr_i64(&mut self) {
+        let b = self.pop_u64() as i64;
+        let a = self.pop_u64() as i64;
+        self.push_u64((a >> b) as u64);
+    }
+
+
+    #[inline]
+    pub fn not_u8(&mut self) {
+        let a = self.pop_u8();
+        self.push_u8(!a);
+    }
+    #[inline]
+    pub fn not_u16(&mut self) {
+        let a = self.pop_u16();
+        self.push_u16(!a);
+    }
+    #[inline]
+    pub fn not_u32(&mut self) {
+        let a = self.pop_u32();
+        self.push_u32(!a);
+    }
+    #[inline]
+    pub fn not_u64(&mut self) {
+        let a = self.pop_u64();
+        self.push_u64(!a);
+    }
+
+    #[inline]
+    pub fn not_i8(&mut self) {
+        let a = self.pop_u8() as i8;
+        self.push_u8(!a as u8);
+    }
+    #[inline]
+    pub fn not_i16(&mut self) {
+        let a = self.pop_u16() as i16;
+        self.push_u16(!a as u16);
+    }
+    #[inline]
+    pub fn not_i32(&mut self) {
+        let a = self.pop_u32() as i32;
+        self.push_u32(!a as u32);
+    }
+    #[inline]
+    pub fn not_i64(&mut self) {
+        let a = self.pop_u64() as i64;
+        self.push_u64(!a as u64);
+    }
+
+
+    #[inline]
+    pub fn neg_u8(&mut self) {
+        let a = self.pop_u8() as i8;
+        self.push_u8(-a as u8);
+    }
+    #[inline]
+    pub fn neg_u16(&mut self) {
+        let a = self.pop_u16() as i16;
+        self.push_u16(-a as u16);
+    }
+    #[inline]
+    pub fn neg_u32(&mut self) {
+        let a = self.pop_u32() as i32;
+        self.push_u32(-a as u32);
+    }
+    #[inline]
+    pub fn neg_u64(&mut self) {
+        let a = self.pop_u64() as i64;
+        self.push_u64(-a as u64);
+    }
+
+    #[inline]
+    pub fn neg_i8(&mut self) {
+        let a = self.pop_u8() as i8;
+        self.push_u8(-a as u8);
+    }
+    #[inline]
+    pub fn neg_i16(&mut self) {
+        let a = self.pop_u16() as i16;
+        self.push_u16(-a as u16);
+    }
+    #[inline]
+    pub fn neg_i32(&mut self) {
+        let a = self.pop_u32() as i32;
+        self.push_u32(-a as u32);
+    }
+    #[inline]
+    pub fn neg_i64(&mut self) {
+        let a = self.pop_u64() as i64;
+        self.push_u64(-a as u64);
+    }
+
+    #[inline]
+    pub fn neg_f32(&mut self) {
+        let a = self.pop_u32() as f32;
+        self.push_u32(-a as u32);
+    }
+    #[inline]
+    pub fn neg_f64(&mut self) {
+        let a = self.pop_u64() as f64;
+        self.push_u64(-a as u64);
+    }
+
+
+    #[inline]
+    pub fn lt_u8(&mut self) {
+        let b = self.pop_u8();
+        let a = self.pop_u8();
+        self.push_u8((a < b) as u8);
+    }
+    #[inline]
+    pub fn lt_u16(&mut self) {
+        let b = self.pop_u16();
+        let a = self.pop_u16();
+        self.push_u8((a < b) as u8);
+    }
+    #[inline]
+    pub fn lt_u32(&mut self) {
+        let b = self.pop_u32();
+        let a = self.pop_u32();
+        self.push_u8((a < b) as u8);
+    }
+    #[inline]
+    pub fn lt_u64(&mut self) {
+        let b = self.pop_u64();
+        let a = self.pop_u64();
+        self.push_u8((a < b) as u8);
+    }
+
+    #[inline]
+    pub fn lt_i8(&mut self) {
+        let b = self.pop_u8() as i8;
+        let a = self.pop_u8() as i8;
+        self.push_u8((a < b) as u8);
+    }
+    #[inline]
+    pub fn lt_i16(&mut self) {
+        let b = self.pop_u16() as i16;
+        let a = self.pop_u16() as i16;
+        self.push_u8((a < b) as u8);
+    }
+    #[inline]
+    pub fn lt_i32(&mut self) {
+        let b = self.pop_u32() as i32;
+        let a = self.pop_u32() as i32;
+        self.push_u8((a < b) as u8);
+    }
+    #[inline]
+    pub fn lt_i64(&mut self) {
+        let b = self.pop_u64() as i64;
+        let a = self.pop_u64() as i64;
+        self.push_u8((a < b) as u8);
+    }
+
+    #[inline]
+    pub fn lt_f32(&mut self) {
+        let b = self.pop_u32() as f32;
+        let a = self.pop_u32() as f32;
+        self.push_u8((a < b) as u8);
+    }
+    #[inline]
+    pub fn lt_f64(&mut self) {
+        let b = self.pop_u64() as f64;
+        let a = self.pop_u64() as f64;
+        self.push_u8((a < b) as u8);
+    }
+
+
+    #[inline]
+    pub fn gt_u8(&mut self) {
+        let b = self.pop_u8();
+        let a = self.pop_u8();
+        self.push_u8((a > b) as u8);
+    }
+    #[inline]
+    pub fn gt_u16(&mut self) {
+        let b = self.pop_u16();
+        let a = self.pop_u16();
+        self.push_u8((a > b) as u8);
+    }
+    #[inline]
+    pub fn gt_u32(&mut self) {
+        let b = self.pop_u32();
+        let a = self.pop_u32();
+        self.push_u8((a > b) as u8);
+    }
+    #[inline]
+    pub fn gt_u64(&mut self) {
+        let b = self.pop_u64();
+        let a = self.pop_u64();
+        self.push_u8((a > b) as u8);
+    }
+
+    #[inline]
+    pub fn gt_i8(&mut self) {
+        let b = self.pop_u8() as i8;
+        let a = self.pop_u8() as i8;
+        self.push_u8((a > b) as u8);
+    }
+    #[inline]
+    pub fn gt_i16(&mut self) {
+        let b = self.pop_u16() as i16;
+        let a = self.pop_u16() as i16;
+        self.push_u8((a > b) as u8);
+    }
+    #[inline]
+    pub fn gt_i32(&mut self) {
+        let b = self.pop_u32() as i32;
+        let a = self.pop_u32() as i32;
+        self.push_u8((a > b) as u8);
+    }
+    #[inline]
+    pub fn gt_i64(&mut self) {
+        let b = self.pop_u64() as i64;
+        let a = self.pop_u64() as i64;
+        self.push_u8((a > b) as u8);
+    }
+
+    #[inline]
+    pub fn gt_f32(&mut self) {
+        let b = self.pop_u32() as f32;
+        let a = self.pop_u32() as f32;
+        self.push_u8((a > b) as u8);
+    }
+    #[inline]
+    pub fn gt_f64(&mut self) {
+        let b = self.pop_u64() as f64;
+        let a = self.pop_u64() as f64;
+        self.push_u8((a > b) as u8);
+    }
+
+
+    #[inline]
+    pub fn lte_u8(&mut self) {
+        let b = self.pop_u8();
+        let a = self.pop_u8();
+        self.push_u8((a <= b) as u8);
+    }
+    #[inline]
+    pub fn lte_u16(&mut self) {
+        let b = self.pop_u16();
+        let a = self.pop_u16();
+        self.push_u8((a <= b) as u8);
+    }
+    #[inline]
+    pub fn lte_u32(&mut self) {
+        let b = self.pop_u32();
+        let a = self.pop_u32();
+        self.push_u8((a <= b) as u8);
+    }
+    #[inline]
+    pub fn lte_u64(&mut self) {
+        let b = self.pop_u64();
+        let a = self.pop_u64();
+        self.push_u8((a <= b) as u8);
+    }
+
+    #[inline]
+    pub fn lte_i8(&mut self) {
+        let b = self.pop_u8() as i8;
+        let a = self.pop_u8() as i8;
+        self.push_u8((a <= b) as u8);
+    }
+    #[inline]
+    pub fn lte_i16(&mut self) {
+        let b = self.pop_u16() as i16;
+        let a = self.pop_u16() as i16;
+        self.push_u8((a <= b) as u8);
+    }
+    #[inline]
+    pub fn lte_i32(&mut self) {
+        let b = self.pop_u32() as i32;
+        let a = self.pop_u32() as i32;
+        self.push_u8((a <= b) as u8);
+    }
+    #[inline]
+    pub fn lte_i64(&mut self) {
+        let b = self.pop_u64() as i64;
+        let a = self.pop_u64() as i64;
+        self.push_u8((a <= b) as u8);
+    }
+
+    #[inline]
+    pub fn lte_f32(&mut self) {
+        let b = self.pop_u32() as f32;
+        let a = self.pop_u32() as f32;
+        self.push_u8((a <= b) as u8);
+    }
+    #[inline]
+    pub fn lte_f64(&mut self) {
+        let b = self.pop_u64() as f64;
+        let a = self.pop_u64() as f64;
+        self.push_u8((a <= b) as u8);
+    }
+
+
+    #[inline]
+    pub fn gte_u8(&mut self) {
+        let b = self.pop_u8();
+        let a = self.pop_u8();
+        self.push_u8((a >= b) as u8);
+    }
+    #[inline]
+    pub fn gte_u16(&mut self) {
+        let b = self.pop_u16();
+        let a = self.pop_u16();
+        self.push_u8((a >= b) as u8);
+    }
+    #[inline]
+    pub fn gte_u32(&mut self) {
+        let b = self.pop_u32();
+        let a = self.pop_u32();
+        self.push_u8((a >= b) as u8);
+    }
+    #[inline]
+    pub fn gte_u64(&mut self) {
+        let b = self.pop_u64();
+        let a = self.pop_u64();
+        self.push_u8((a >= b) as u8);
+    }
+
+    #[inline]
+    pub fn gte_i8(&mut self) {
+        let b = self.pop_u8() as i8;
+        let a = self.pop_u8() as i8;
+        self.push_u8((a >= b) as u8);
+    }
+    #[inline]
+    pub fn gte_i16(&mut self) {
+        let b = self.pop_u16() as i16;
+        let a = self.pop_u16() as i16;
+        self.push_u8((a >= b) as u8);
+    }
+    #[inline]
+    pub fn gte_i32(&mut self) {
+        let b = self.pop_u32() as i32;
+        let a = self.pop_u32() as i32;
+        self.push_u8((a >= b) as u8);
+    }
+    #[inline]
+    pub fn gte_i64(&mut self) {
+        let b = self.pop_u64() as i64;
+        let a = self.pop_u64() as i64;
+        self.push_u8((a >= b) as u8);
+    }
+
+    #[inline]
+    pub fn gte_f32(&mut self) {
+        let b = self.pop_u32() as f32;
+        let a = self.pop_u32() as f32;
+        self.push_u8((a >= b) as u8);
+    }
+    #[inline]
+    pub fn gte_f64(&mut self) {
+        let b = self.pop_u64() as f64;
+        let a = self.pop_u64() as f64;
+        self.push_u8((a >= b) as u8);
     }
 
 

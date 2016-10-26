@@ -16,8 +16,9 @@ pub enum Instr {
     call, ret,
 
     // types
-    // instructs the vm to interpret the next bytes as pointer or intermediate value
-    type_ptr, type_int,
+    // instructs the vm to interpret the next bytes as
+    // pointer/indirect, pointer/indirect offset or intermediate value
+    type_int, type_ptr, type_ptr_off, type_idr_ptr, type_idr_ptr_off,
 
     // stack
     push_u8, push_u16, push_u32, push_u64,
@@ -69,8 +70,11 @@ pub enum Instr {
     shr_i8, shr_i16, shr_i32, shr_i64,
 
     // single operators (value: ptr, out: ptr)
+    not_u8, not_u16, not_u32, not_u64,
+    not_i8, not_i16, not_i32, not_i64,
+
     neg_u8, neg_u16, neg_u32, neg_u64,
-    neg_i8, neg_i16, neg_i32, neg_i64,
+    neg_i8, neg_i16, neg_i32, neg_i64, neg_f32, neg_f64,
 
     // comparison operators (a: ptr, b: ptr, out: ptr)
     lt_u8, lt_u16, lt_u32, lt_u64,

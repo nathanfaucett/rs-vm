@@ -11,34 +11,38 @@ types: u8, u16, u32, u64
 
 halt, nop,
 
-wait # puts process in Wait state
-
-spawn target # spawns new process starting at target
-
 copy_{type} # duplicates top of stack
-push_{type}
+push_{type} type, value, # type_int, type_ptr, type_ptr_off, type_idr_ptr, type_idr_ptr_off,
 pop_{type}
 
-add_{type} a, b, out
-sub_{type} a, b, out
-div_{type} a, b, out
-mul_{type} a, b, out
-rem_{type} a, b, out
+load_{type} # loads value from top of stack and puts it on top of stack
+save_{type} # pops address then pops value and puts it in it
 
-and_{type} a, b, out
-or_{type} a, b, out
-xor_{type} a, b, out
-neg_{type} a, out
-not_{type} a, out
-shl_{type} a, b, out
-shr_{type} a, b, out
+# takes top two values from stack
+add_{type}
+sub_{type}
+div_{type}
+mul_{type}
+rem_{type}
 
-lt_{type} a, b, out
-lte_{type} a, b, out
-gt_{type} a, b, out
-gte_{type} a, b, out
-eq_{type} a, b, out
-neq_{type} a, b, out
+# takes top two values from stack
+and_{type}
+or_{type}
+xor_{type}
+shl_{type}
+shr_{type}
+
+# takes top value from stack
+neg_{type}
+not_{type}
+
+# takes top two values from stack
+lt_{type}
+lte_{type}
+gt_{type}
+gte_{type}
+eq_{type}
+neq_{type}
 
 # if value is not 0 jumps to target's value
 if_jmp value, target

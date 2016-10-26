@@ -1,5 +1,4 @@
-//#![no_std]
-extern crate core;
+#![no_std]
 
 
 extern crate vector;
@@ -11,10 +10,10 @@ extern crate remove;
 mod instrs;
 mod process;
 mod state;
-mod virtual_machine;
+mod vm;
 
 
 pub use instrs::Instr;
 pub use process::Process;
 pub use state::State;
-pub use virtual_machine::VirtualMachine;
+pub use vm::run;
