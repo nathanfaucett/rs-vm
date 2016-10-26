@@ -46,16 +46,6 @@ impl<'a> Process<'a> {
     pub fn to_instr(instruction: u8) -> Instr {unsafe {mem::transmute(instruction)}}
 
     #[inline]
-    pub fn skip(&mut self, count: usize) {
-        let pc = self.program_counter + count;
-
-        if pc < self.program.len() {
-            self.program_counter = pc;
-        } else {
-            panic!("Cannot skip past end of program!");
-        }
-    }
-    #[inline]
     pub fn next(&mut self) -> Option<u8> {
         if self.program_counter < self.program.len() {
             let data = self.program[self.program_counter];
@@ -157,18 +147,64 @@ impl<'a> Process<'a> {
     pub fn next_f64(&mut self) -> f64 {self.next_u64() as f64}
 
     #[inline]
+    pub fn read_size_8(&mut self) -> u8 {
+        match Self::to_instr(self.next_u8()) {
+            Instr::size_8 => self.next_u8(),
+            Instr::size_16 => self.next_u16() as u8,
+            Instr::size_32 => self.next_u32() as u8,
+            Instr::size_64 => self.next_u64() as u8,
+            instr => panic!("Invalid size {:?} given", instr),
+        }
+    }
+    #[inline]
+    pub fn read_size_16(&mut self) -> u16 {
+        match Self::to_instr(self.next_u8()) {
+            Instr::size_8 => self.next_u8() as u16,
+            Instr::size_16 => self.next_u16(),
+            Instr::size_32 => self.next_u32() as u16,
+            Instr::size_64 => self.next_u64() as u16,
+            instr => panic!("Invalid size {:?} given", instr),
+        }
+    }
+    #[inline]
+    pub fn read_size_32(&mut self) -> u32 {
+        match Self::to_instr(self.next_u8()) {
+            Instr::size_8 => self.next_u8() as u32,
+            Instr::size_16 => self.next_u16() as u32,
+            Instr::size_32 => self.next_u32(),
+            Instr::size_64 => self.next_u64() as u32,
+            instr => panic!("Invalid size {:?} given", instr),
+        }
+    }
+    #[inline]
+    pub fn read_size_64(&mut self) -> u64 {
+        match Self::to_instr(self.next_u8()) {
+            Instr::size_8 => self.next_u8() as u64,
+            Instr::size_16 => self.next_u16() as u64,
+            Instr::size_32 => self.next_u32() as u64,
+            Instr::size_64 => self.next_u64(),
+            instr => panic!("Invalid size {:?} given", instr),
+        }
+    }
+
+    #[cfg(target_pointer_width = "32")]
+    #[inline]
+    pub fn read_size_usize(&mut self) -> usize {self.read_size_32() as usize}
+    #[cfg(target_pointer_width = "64")]
+    #[inline]
+    pub fn read_size_usize(&mut self) -> usize {self.read_size_64() as usize}
+
+    #[inline]
     pub fn read_u8(&mut self) -> u8 {
-        let typ = Self::to_instr(self.next_u8());
+        match Self::to_instr(self.next_u8()) {
+            Instr::type_int => self.read_size_8(),
 
-        match typ {
-            Instr::type_int => self.next_u8(),
+            Instr::type_ptr => unsafe {*(self.read_size_usize() as *const u8)},
+            Instr::type_ptr_off => unsafe {*((self.read_size_usize() + self.read_size_usize()) as *const u8)},
 
-            Instr::type_ptr => unsafe {*(self.next_usize() as *const u8)},
-            Instr::type_ptr_off => unsafe {*((self.next_usize() + self.next_usize()) as *const u8)},
-
-            Instr::type_idr_ptr => unsafe {**(self.next_usize() as *const *const u8)},
+            Instr::type_idr_ptr => unsafe {**(self.read_size_usize() as *const *const u8)},
             Instr::type_idr_ptr_off => unsafe {
-                *((*(self.next_usize() as *const usize) + self.next_usize()) as *const u8)
+                *((*(self.read_size_usize() as *const usize) + self.read_size_usize()) as *const u8)
             },
 
             instr => panic!("Invalid type {:?} given, trying to read 8 bits ", instr),
@@ -176,17 +212,15 @@ impl<'a> Process<'a> {
     }
     #[inline]
     pub fn read_u16(&mut self) -> u16 {
-        let typ = Self::to_instr(self.next_u8());
+        match Self::to_instr(self.next_u8()) {
+            Instr::type_int => self.read_size_16(),
 
-        match typ {
-            Instr::type_int => self.next_u16(),
+            Instr::type_ptr => unsafe {*(self.read_size_usize() as *const u16)},
+            Instr::type_ptr_off => unsafe {*((self.read_size_usize() + self.read_size_usize()) as *const u16)},
 
-            Instr::type_ptr => unsafe {*(self.next_usize() as *const u16)},
-            Instr::type_ptr_off => unsafe {*((self.next_usize() + self.next_usize()) as *const u16)},
-
-            Instr::type_idr_ptr => unsafe {**(self.next_usize() as *const *const u16)},
+            Instr::type_idr_ptr => unsafe {**(self.read_size_usize() as *const *const u16)},
             Instr::type_idr_ptr_off => unsafe {
-                *((*(self.next_usize() as *const usize) + self.next_usize()) as *const u16)
+                *((*(self.read_size_usize() as *const usize) + self.read_size_usize()) as *const u16)
             },
 
             instr => panic!("Invalid type {:?} given, trying to read 16 bits", instr),
@@ -194,17 +228,15 @@ impl<'a> Process<'a> {
     }
     #[inline]
     pub fn read_u32(&mut self) -> u32 {
-        let typ = Self::to_instr(self.next_u8());
+        match Self::to_instr(self.next_u8()) {
+            Instr::type_int => self.read_size_32(),
 
-        match typ {
-            Instr::type_int => self.next_u32(),
+            Instr::type_ptr => unsafe {*(self.read_size_usize() as *const u32)},
+            Instr::type_ptr_off => unsafe {*((self.read_size_usize() + self.read_size_usize()) as *const u32)},
 
-            Instr::type_ptr => unsafe {*(self.next_usize() as *const u32)},
-            Instr::type_ptr_off => unsafe {*((self.next_usize() + self.next_usize()) as *const u32)},
-
-            Instr::type_idr_ptr => unsafe {**(self.next_usize() as *const *const u32)},
+            Instr::type_idr_ptr => unsafe {**(self.read_size_usize() as *const *const u32)},
             Instr::type_idr_ptr_off => unsafe {
-                *((*(self.next_usize() as *const usize) + self.next_usize()) as *const u32)
+                *((*(self.read_size_usize() as *const usize) + self.read_size_usize()) as *const u32)
             },
 
             instr => panic!("Invalid type {:?} given, trying to read 32 bits", instr),
@@ -212,22 +244,21 @@ impl<'a> Process<'a> {
     }
     #[inline]
     pub fn read_u64(&mut self) -> u64 {
-        let typ = Self::to_instr(self.next_u8());
+        match Self::to_instr(self.next_u8()) {
+            Instr::type_int => self.read_size_64(),
 
-        match typ {
-            Instr::type_int => self.next_u64(),
+            Instr::type_ptr => unsafe {*(self.read_size_usize() as *const u64)},
+            Instr::type_ptr_off => unsafe {*((self.read_size_usize() + self.read_size_usize()) as *const u64)},
 
-            Instr::type_ptr => unsafe {*(self.next_usize() as *const u64)},
-            Instr::type_ptr_off => unsafe {*((self.next_usize() + self.next_usize()) as *const u64)},
-
-            Instr::type_idr_ptr => unsafe {**(self.next_usize() as *const *const u64)},
+            Instr::type_idr_ptr => unsafe {**(self.read_size_usize() as *const *const u64)},
             Instr::type_idr_ptr_off => unsafe {
-                *((*(self.next_usize() as *const usize) + self.next_usize()) as *const u64)
+                *((*(self.read_size_usize() as *const usize) + self.read_size_usize()) as *const u64)
             },
 
             instr => panic!("Invalid type {:?} given, trying to read 64 bits", instr),
         }
     }
+
     #[cfg(target_pointer_width = "32")]
     #[inline]
     pub fn read_usize(&mut self) -> usize {self.read_u32() as usize}
@@ -240,7 +271,7 @@ impl<'a> Process<'a> {
 
     #[inline]
     pub fn jmp(&mut self) {
-        let index = self.next_usize();
+        let index = self.read_usize();
         self.program_counter = index;
     }
     #[inline]
@@ -248,16 +279,16 @@ impl<'a> Process<'a> {
         let value = self.pop_u8();
 
         if value == 0 {
-            self.skip(8); // skip location instruction
+            self.read_usize(); // skip target value
         } else {
-            let index = self.next_usize();
+            let index = self.read_usize();
             self.program_counter = index;
         }
     }
 
     #[inline]
     pub fn call(&mut self) {
-        let index = self.next_usize();
+        let index = self.read_usize();
         self.function_stack.push(self.program_counter);
         self.program_counter = index;
     }

@@ -25,20 +25,20 @@ function_end:
 
 halt
 */
-static PROGRAM: [u8; 42] = [
-    Instr::call as u8, 0, 0, 0, 0, 0, 0, 0, 18,
-    Instr::jmp as u8, 0, 0, 0, 0, 0, 0, 0, 41,
+static PROGRAM: [u8; 30] = [
+    Instr::call as u8, Instr::type_int as u8, Instr::size_8 as u8, 8,
+    Instr::jmp as u8, Instr::type_int as u8, Instr::size_8 as u8, 29,
 
-    Instr::push_u8 as u8, Instr::type_int as u8, 0,
+    Instr::push_u8 as u8, Instr::type_int as u8, Instr::size_8 as u8, 0,
 
     // loop
-    Instr::push_u8 as u8, Instr::type_int as u8, 1,
+    Instr::push_u8 as u8, Instr::type_int as u8, Instr::size_8 as u8, 1,
     Instr::add_u8 as u8,
 
     Instr::copy_u8 as u8,
-    Instr::push_u8 as u8, Instr::type_int as u8, 2,
+    Instr::push_u8 as u8, Instr::type_int as u8, Instr::size_8 as u8, 3,
     Instr::neq_u8 as u8,
-    Instr::if_jmp as u8, 0, 0, 0, 0, 0, 0, 0, 21,
+    Instr::if_jmp as u8, Instr::type_int as u8, Instr::size_8 as u8, 11,
     Instr::pop_u8 as u8,
     Instr::ret as u8,
     // loop end
@@ -51,7 +51,9 @@ static PROGRAM: [u8; 42] = [
 fn test_next() {
     let mut process = Process::new(&PROGRAM);
     assert_eq!(process.next_u8(), Instr::call as u8);
-    assert_eq!(process.next_usize(), 18);
+    assert_eq!(process.next_u8(), Instr::type_int as u8);
+    assert_eq!(process.next_u8(), Instr::size_8 as u8);
+    assert_eq!(process.next_u8(), 8);
 }
 
 #[test]

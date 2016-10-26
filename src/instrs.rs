@@ -19,6 +19,8 @@ pub enum Instr {
     // instructs the vm to interpret the next bytes as
     // pointer/indirect, pointer/indirect offset or intermediate value
     type_int, type_ptr, type_ptr_off, type_idr_ptr, type_idr_ptr_off,
+    // sizes
+    size_8, size_16, size_32, size_64,
 
     // stack
     push_u8, push_u16, push_u32, push_u64,
